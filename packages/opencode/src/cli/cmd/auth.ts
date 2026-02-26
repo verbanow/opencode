@@ -314,6 +314,23 @@ export const AuthLoginCommand = cmd({
           openrouter: 5,
           vercel: 6,
         }
+
+        // Add plugin-based providers that have auth methods
+        const plugins = await Plugin.list()
+        for (const plugin of plugins) {
+          if (plugin.auth?.provider && !providers[plugin.auth.provider]) {
+            const providerName =
+              {
+                kiro: "Kiro (AWS)",
+              }[plugin.auth.provider] ?? plugin.auth.provider
+            providers[plugin.auth.provider] = {
+              id: plugin.auth.provider,
+              name: providerName,
+              env: [],
+              models: {},
+            }
+          }
+        }
         const pluginProviders = resolvePluginProviders({
           hooks: await Plugin.list(),
           existingProviders: providers,
@@ -339,6 +356,7 @@ export const AuthLoginCommand = cmd({
                   opencode: "recommended",
                   anthropic: "Claude Max or API key",
                   openai: "ChatGPT Plus/Pro or API key",
+                  kiro: "Use existing Kiro CLI login",
                 }[x.id],
               })),
             ),
