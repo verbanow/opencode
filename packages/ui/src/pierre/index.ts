@@ -1,6 +1,5 @@
 import { DiffLineAnnotation, FileContents, FileDiffOptions, type SelectedLineRange } from "@pierre/diffs"
 import { ComponentProps } from "solid-js"
-import { lineCommentStyles } from "../components/line-comment-styles"
 
 export type DiffProps<T = {}> = FileDiffOptions<T> & {
   before: FileContents
@@ -8,15 +7,13 @@ export type DiffProps<T = {}> = FileDiffOptions<T> & {
   annotations?: DiffLineAnnotation<T>[]
   selectedLines?: SelectedLineRange | null
   commentedLines?: SelectedLineRange[]
-  onLineNumberSelectionEnd?: (selection: SelectedLineRange | null) => void
   onRendered?: () => void
   class?: string
   classList?: ComponentProps<"div">["classList"]
 }
 
 const unsafeCSS = `
-[data-diff],
-[data-file] {
+[data-diff] {
   --diffs-bg: light-dark(var(--diffs-light-bg), var(--diffs-dark-bg));
   --diffs-bg-buffer: var(--diffs-bg-buffer-override, light-dark( color-mix(in lab, var(--diffs-bg) 92%, var(--diffs-mixer)), color-mix(in lab, var(--diffs-bg) 92%, var(--diffs-mixer))));
   --diffs-bg-hover: var(--diffs-bg-hover-override, light-dark( color-mix(in lab, var(--diffs-bg) 97%, var(--diffs-mixer)), color-mix(in lab, var(--diffs-bg) 91%, var(--diffs-mixer))));
@@ -47,8 +44,7 @@ const unsafeCSS = `
   --diffs-bg-selection-text: rgb(from var(--surface-warning-strong) r g b / 0.2);
 }
 
-:host([data-color-scheme='dark']) [data-diff],
-:host([data-color-scheme='dark']) [data-file] {
+:host([data-color-scheme='dark']) [data-diff] {
   --diffs-selection-number-fg: #fdfbfb;
   --diffs-bg-selection: var(--diffs-bg-selection-override, rgb(from var(--solaris-dark-6) r g b / 0.65));
   --diffs-bg-selection-number: var(
@@ -57,8 +53,7 @@ const unsafeCSS = `
   );
 }
 
-[data-diff] ::selection,
-[data-file] ::selection {
+[data-diff] ::selection {
   background-color: var(--diffs-bg-selection-text);
 }
 
@@ -74,16 +69,7 @@ const unsafeCSS = `
   box-shadow: inset 0 0 0 9999px var(--diffs-bg-selection);
 }
 
-[data-file] [data-line][data-comment-selected]:not([data-selected-line]) {
-  box-shadow: inset 0 0 0 9999px var(--diffs-bg-selection);
-}
-
 [data-diff] [data-column-number][data-comment-selected]:not([data-selected-line]) {
-  box-shadow: inset 0 0 0 9999px var(--diffs-bg-selection-number);
-  color: var(--diffs-selection-number-fg);
-}
-
-[data-file] [data-column-number][data-comment-selected]:not([data-selected-line]) {
   box-shadow: inset 0 0 0 9999px var(--diffs-bg-selection-number);
   color: var(--diffs-selection-number-fg);
 }
@@ -92,26 +78,12 @@ const unsafeCSS = `
   box-shadow: inset 0 0 0 9999px var(--diffs-bg-selection);
 }
 
-[data-file] [data-line-annotation][data-comment-selected]:not([data-selected-line]) [data-annotation-content] {
-  box-shadow: inset 0 0 0 9999px var(--diffs-bg-selection);
-}
-
 [data-diff] [data-line][data-selected-line] {
   background-color: var(--diffs-bg-selection);
   box-shadow: inset 2px 0 0 var(--diffs-selection-border);
 }
 
-[data-file] [data-line][data-selected-line] {
-  background-color: var(--diffs-bg-selection);
-  box-shadow: inset 2px 0 0 var(--diffs-selection-border);
-}
-
 [data-diff] [data-column-number][data-selected-line] {
-  background-color: var(--diffs-bg-selection-number);
-  color: var(--diffs-selection-number-fg);
-}
-
-[data-file] [data-column-number][data-selected-line] {
   background-color: var(--diffs-bg-selection-number);
   color: var(--diffs-selection-number-fg);
 }
@@ -132,10 +104,16 @@ const unsafeCSS = `
 }
 
 [data-diff-header],
-[data-diff],
-[data-file] {
-  [data-separator] {
-    height: 24px;
+[data-diff] {
+  [data-separator-wrapper] {
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  [data-separator-multi-button] {
+    grid-template-rows: 10px 10px !important;
+    [data-expand-button] {
+      height: 12px !important;
+    }
   }
   [data-column-number] {
     background-color: var(--background-stronger);
@@ -151,13 +129,49 @@ const unsafeCSS = `
   }
   [data-code] {
     overflow-x: auto !important;
-    overflow-y: hidden !important;
   }
-}
 
-${lineCommentStyles}
+  [data-gutter] {
+    [data-gutter-buffer] {
+      background: inherit !important;
+    }
+    [data-separator] {
+      background-color: var(--surface-diff-hidden-strong) !important;
+    }
+    [data-separator] [data-expand-button] {
+      width: 100% !important;
+      height: 24px !important;
+      justify-content: center !important;
+      padding: 0 !important;
+    }
+    [data-separator] [data-separator-content] {
+      display: none !important;
+    }
+  }
 
-`
+  [data-content] {
+    [data-separator] {
+      background-color: var(--surface-diff-hidden-base) !important;
+    }
+    [data-separator] [data-separator-wrapper] {
+      display: flex !important;
+      height: 24px !important;
+    }
+    [data-separator] [data-expand-button] {
+      display: none !important;
+    }
+    [data-separator] [data-separator-content] {
+      display: flex !important;
+      height: 24px !important;
+      padding-left: 8px !important;
+      user-select: none !important;
+      cursor: default !important;
+    }
+    [data-separator] [data-separator-content] [data-unmodified-lines] {
+      mix-blend-mode: var(--text-mix-blend-mode);
+    }
+  }
+}`
 
 export function createDefaultOptions<T>(style: FileDiffOptions<T>["diffStyle"]) {
   return {
@@ -170,7 +184,6 @@ export function createDefaultOptions<T>(style: FileDiffOptions<T>["diffStyle"]) 
     lineHoverHighlight: "both",
     disableBackground: false,
     expansionLineCount: 20,
-    hunkSeparators: "line-info-basic",
     lineDiffType: style === "split" ? "word-alt" : "none",
     maxLineDiffLength: 1000,
     maxLineLengthForHighlighting: 1000,
